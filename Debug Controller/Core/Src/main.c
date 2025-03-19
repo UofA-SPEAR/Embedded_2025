@@ -622,7 +622,7 @@ void ModeDebugLoop(void){
 	selectedIDPrev = selectedID;
 	selectedActuatorPrev = selectedActuator;
 
-	float data = map(joystickValues.l, -1, 1, 0.1, 1) * joystickValues.r;
+	float data = map(joystickValues.l, -1, 1, 0.1, 1) * -joystickValues.r;
 	uint32_t ndata = 0;
 	memcpy(&ndata, &data, sizeof data);
 
@@ -661,6 +661,7 @@ void ModeDriveEntry(void){
 
 void ModeDriveLoop(void){
 	uint8_t drive[6] = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16};
+	float driveMod[6] = {1, 1, 1, -1, -1, -1};
 	uint8_t steer[4] = {0x22, 0x23, 0x24, 0x25}; //BL, FL, BR, FR
 	float steerRight[4] = {-0.75, 0.75, -1, 1}; //BL, FL, BR, FR
 	float steerLeft[4] = {-1, 1, -0.75, 0.75}; //BL, FL, BR, FR
@@ -670,7 +671,7 @@ void ModeDriveLoop(void){
 		selectedID = (drive[i] >> 4) & 0x0F;
 		selectedActuator = (drive[i] >> 0) & 0x0F;
 		commandId = 0x03;
-		float data = joystickValues.r;
+		float data = joystickValues.r * driveMod[i] * 0.6;
 		uint32_t ndata = 0;
 		memcpy(&ndata, &data, sizeof data);
 		CAN_Tx_Queue_Add(
@@ -683,7 +684,7 @@ void ModeDriveLoop(void){
 		selectedActuator = (steer[i] >> 0) & 0x0F;
 		commandId = 0x02;
 		if (joystickValues.l > 0){
-			float data = joystickValues.l * steerRight[i] * steerAngle;
+			float data = joystickValues.l * steerRight[i] * -steerAngle;
 			uint32_t ndata = 0;
 			memcpy(&ndata, &data, sizeof data);
 			CAN_Tx_Queue_Add(
@@ -691,7 +692,7 @@ void ModeDriveLoop(void){
 				ndata
 			);
 		} else {
-			float data = joystickValues.l * steerLeft[i] * steerAngle;
+			float data = joystickValues.l * steerLeft[i] * -steerAngle;
 			uint32_t ndata = 0;
 			memcpy(&ndata, &data, sizeof data);
 			CAN_Tx_Queue_Add(
